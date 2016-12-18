@@ -11,13 +11,19 @@ class Scraper
     @asins_to_scrape = response.split(",").map {|a| a.strip}
   end
 
-  # private
+  def scrape_all_asins
+    @asins_to_scrape.each do |asin|
+      scrape_asin(asin)
+      sleep(rand(3..6))
+    end
+  end
+
+  private
 
   def scrape_asin(asin)
     website = 'https://www.amazon.com/gp/offer-listing/' + asin + '/ref=olp_f_primeEligible?ie=UTF8&f_new=true&f_primeEligible=true'
     page = @agent.get(website)
     @results << {"#{asin}" => parse_page(page)}
-    binding.pry
   end
 
   def parse_page(page)
