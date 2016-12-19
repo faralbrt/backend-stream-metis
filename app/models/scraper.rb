@@ -31,7 +31,7 @@ class Scraper
     title = page.at_css("h1.a-size-large.a-spacing-none") || "n/a"
     price = page.at_css("span.a-size-large.a-color-price.olpOfferPrice.a-text-bold") || "n/a"
     title = title.text.strip unless title == 'n/a'
-    price = price.text.stip unless price == 'n/a'
+    price = price.text.strip unless price == 'n/a'
     return [title, price]
   end
 

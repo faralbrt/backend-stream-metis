@@ -138,11 +138,6 @@ task "console" do
   exec "pry -r./config/environment"
 end
 
-desc 'Start the schedule file'
-task :schedule do
-  exec "ruby -r./app/runner.rb"
-end
-
 
 # In a production environment like Heroku, RSpec might not
 # be available.  To handle this, rescue the LoadError.
