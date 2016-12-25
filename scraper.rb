@@ -20,12 +20,14 @@ class Scraper
     products = []
     @asins_to_scrape.each_slice(10) do |asins|
       prices += @client.get_lowest_offer_listings_for_asin(asins).parse
+      binding.pry
       products += @client.get_matching_product(asins).parse
       sleep(6)
     end
     results = prices.zip(products)
     results = results.zip(@asins_to_scrape)
     results.each do |result|
+      puts result.last
       parse_and_post(post_to_uri, result)
     end
   end
