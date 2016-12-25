@@ -6,12 +6,7 @@ class Scraper
   attr_accessor :agent, :asins_to_scrape, :results
   def initialize
     @agent = Mechanize.new {|agent| agent.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.87 Safari/537.36"}
-    @client = MWS::Products::Client.new(
-      primary_marketplace_id: "ATVPDKIKX0DER",
-      merchant_id: "AEAWO9FEFRDJI",
-      aws_access_key_id: "AKIAIRYWBD64DCZGOLOQ",
-      aws_secret_access_key: "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",
-      )
+    @client = MWS::Products::Client.new
   end
 
   def gather_asins(url)
