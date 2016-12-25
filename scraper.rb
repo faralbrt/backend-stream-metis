@@ -1,7 +1,17 @@
+require 'mechanize'
+require 'peddler'
+require 'pry'
+
 class Scraper
   attr_accessor :agent, :asins_to_scrape, :results
   def initialize
     @agent = Mechanize.new {|agent| agent.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.87 Safari/537.36"}
+    @client = MWS::Products::Client.new(
+      primary_marketplace_id: "ATVPDKIKX0DER",
+      merchant_id: "AEAWO9FEFRDJI",
+      aws_access_key_id: "AKIAIRYWBD64DCZGOLOQ",
+      aws_secret_access_key: "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",
+      )
   end
 
   def gather_asins(url)
@@ -11,35 +21,49 @@ class Scraper
   end
 
   def scrape_all_asins(post_to_uri)
-    @asins_to_scrape.each do |asin|
-      results = scrape_asin(asin)
-      post_to_stream(post_to_uri, results[:asin], results[:title], results[:price])
-      sleep(rand(3..6))
+    prices = []
+    products = []
+    @asins_to_scrape.each_slice(10) do |asins|
+      prices += @client.get_lowest_offer_listings_for_asin(asins).parse
+      products += @client.get_matching_product(asins).parse
+      sleep(6)
+    end
+    results = prices.zip(products)
+    results = results.zip(@asins_to_scrape)
+    results.each do |result|
+      parse_and_post(post_to_uri, result)
     end
   end
 
   private
 
-  def scrape_asin(asin)
-    website = 'https://www.amazon.com/gp/offer-listing/' + asin + '/ref=olp_f_primeEligible?ie=UTF8&f_new=true&f_primeEligible=true'
-    page = @agent.get(website)
-    page = parse_page(page)
-    {asin: asin, title: page[0], price: page[1]}
-  end
-
-  def parse_page(page)
-    title = page.at_css("h1.a-size-large.a-spacing-none") || "n/a"
-    price = page.at_css("span.a-size-large.a-color-price.olpOfferPrice.a-text-bold") || "n/a"
-    title = title.text.strip unless title == 'n/a'
-    price = price.text.strip unless price == 'n/a'
-    return [title, price]
-  end
-
-  def post_to_stream(uri, asin, title, price)
+  def parse_and_post(uri, result)
     uri = URI(uri)
-    Net::HTTP.post_form(uri, 'asin' => asin, 'title' => title, 'price' => price)
+    Net::HTTP.post_form(uri, parse_result(result))
   end
-end
 
-# uri = URI('http://127.0.0.1:9393/asinlogs')
-# res = Net::HTTP.post_form(uri, 'asin' => "B003WCR7O0", 'title' => "Wet Line Xtreme Gel Clear, 8.8 oz", 'price' => "$4.05")
+  def parse_result(result)
+    {'asin' => result.last, 'title' => parse_title(result), 'price' => parse_price(result)}
+  end
+
+  def parse_price(result)
+    listings = result.first.first
+    return "n/a" if listings["status"] == "ClientError"
+    listings = listings["Product"]["LowestOfferListings"]["LowestOfferListing"]
+    price = "n/a"
+    listings.each do |listing|
+      if listing["Qualifiers"]["FulfillmentChannel"] == "Amazon" && listing["Qualifiers"]["ItemCondition"] == "New"
+        price = listing["Price"]["LandedPrice"]["Amount"]
+        break
+      end
+    end
+    return price
+  end
+
+  def parse_title(result)
+    product = result.first.last
+    return "n/a" if product["status"] == "ClientError"
+    return product["Product"]["AttributeSets"]["ItemAttributes"]["Title"]
+  end
+
+end
