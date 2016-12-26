@@ -1,6 +1,5 @@
 require_relative 'scraper'
 
-puts "process begins..."
 host = 'http://stream-metis.herokuapp.com'
 scraper = Scraper.new
 scraper.gather_asins(host + '/asins')
