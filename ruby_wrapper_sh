@@ -1,0 +1,4 @@
+#!/bin/bash
+
+. ~root/.bash_profile
+`ruby /root/backend-stream-metis/runner.rb`
