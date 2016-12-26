@@ -1,16 +1,16 @@
-require 'mechanize'
 require 'peddler'
 require 'pry'
+require 'net/http'
 
 class Scraper
   attr_accessor :agent, :asins_to_scrape, :results
   def initialize
-    @agent = Mechanize.new {|agent| agent.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.87 Safari/537.36"}
     @client = MWS::Products::Client.new
   end
 
   def gather_asins(url)
-    response = @agent.get(url)
+    uri = URI(url)
+    response = Net::HTTP.get_response(uri)
     response = response.body.delete("[]\"")
     @asins_to_scrape = response.split(",").map {|a| a.strip}
   end
