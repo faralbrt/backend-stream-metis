@@ -38,6 +38,7 @@ class Scraper
   end
 
   def parse_result(result)
+    puts "ASIN: #{result.last}"
     {'asin' => result.last, 'title' => parse_title(result), 'price' => parse_price(result)}
   end
 
