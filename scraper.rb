@@ -21,7 +21,7 @@ class Scraper
     @asins_to_scrape.each_slice(10) do |asins|
       prices += @client.get_lowest_offer_listings_for_asin(asins).parse
       products += @client.get_matching_product(asins).parse
-      sleep(6)
+      sleep(1)
     end
     results = prices.zip(products)
     results = results.zip(@asins_to_scrape)
@@ -43,7 +43,9 @@ class Scraper
 
   def parse_price(result)
     listings = result.first.first
+    puts listings
     return "n/a" if listings["status"] == "ClientError"
+    return 'n/a' unless listings["Product"]["LowestOfferListings"]
     listings = listings["Product"]["LowestOfferListings"]["LowestOfferListing"]
     price = "n/a"
     listings = [listings] unless listings.class == Array
