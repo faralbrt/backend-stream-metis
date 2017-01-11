@@ -43,7 +43,6 @@ class Scraper
 
   def parse_price(result)
     listings = result.first.first
-    puts listings
     return "n/a" if listings["status"] == "ClientError"
     return 'n/a' unless listings["Product"]["LowestOfferListings"]
     listings = listings["Product"]["LowestOfferListings"]["LowestOfferListing"]
